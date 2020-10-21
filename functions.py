@@ -6,19 +6,30 @@ import re
 import math
 
 # Funzione che dato un array di testi scompone ciasccuno di esso in un array di frasi ( sequenza di parole che termina con un simbolo di punteggiatura come . ? !)
-# TODO: Da cambiare in: ho le parole, una frase è fino ad un . ? !
+# ho le parole, una frase è fino ad un . ? !
 def getSentences(words):
     #frasi = []
-    sentencesTexts = []
+    #sentencesTexts = []
+    sentences = []
     sentence = []
     
-    
+    for index in range(len(words)):
+        word = words[index]
+        sentence.append(word)
+        if word in ['!', '.', '?'] or index==len(words)-1:
+            sentences.append(sentence)
+            #print("Trovato simbolo per terminare la frase o ultima parola")
+            #print(sentence)
+            sentence = []
+    #print(sentences)
+    return sentences
     
 # Funzione che dato un array di testi ricava le singole parole (?:[A-Z]\.)+|\w+(?:-\w+)*|\$?\d+(?:\.\d+)?%?|\.\.\.|[][.,;"'?():-_]
 # (?:[A-Z]\.)+|\w+(?:-\w+)*|\$?\d+(?:\.\d+)?%?|\.\.\.|[&.,;"'?():-_]
 #[\w]+'t|(?:[A-Z]\.)+|\w+(?:-\w+)*|\$?\d+(?:\.\d+)?%?|\.\.\.|[&.,;"'?():-_]   questa prende anche aren't couldn't come unica parola
+# [\w]+'t|(?:[A-Z]\.)+|\d+(?:\.\d+)?|\w+(?:-\w+)*|\.\.\.|[&.,€£;%\$\"'?():-_] 
 def getWords(text):
-    words = re.findall(r"[\w]+'t|(?:[A-Z]\.)+|\w+(?:-\w+)*|\$?\d+(?:\.\d+)?%?|\.\.\.|[&.,;\"'?():-_]", text)
+    words = re.findall(r"[\w]+'t|(?:[A-Z]\.)+|\d+(?:\.\d+)?|\w+(?:-\w+)*|\.\.\.|[&.,€£;%\$\"'?():-_]", text)
     # Dividere le parole che finiscono con couldn't aren't in -> could not    are not
     # Problema con will not = won't
     for word in words:
@@ -32,8 +43,12 @@ def getWords(text):
                 
             index = words.index(word)
             words.pop(index)
-            words.insert(index, verb)
-            words.insert(index+1, "not")
+            if len(verb) != 0:
+                words.insert(index, verb)
+                words.insert(index+1, "not")
+            else:
+                # Caso in cui sia uno stacco n't
+                words.insert(index, "not")
     return words
     
 # Funzione per contare le sillabe 
@@ -42,9 +57,9 @@ def estraiSillabe(testi):
     
 
     
-# Funzione che dato calcola la frequenza standardizzata delle parole nei testi
+# Funzione che dato calcola la frequenza standardizzata delle parole nei testi, parametro per renderla case-sensitive oppure no
 # frequenza assoluta x log ( numero documenti totale / numero documenti con quel termine) 
-def getFrequencyIDF(wordsTexts):
+def getFrequencyIDF(wordsTexts, caseSensitive):
     frequencyWords = dict()
     nTexts = len(wordsTexts)
     index = 0
@@ -53,7 +68,11 @@ def getFrequencyIDF(wordsTexts):
         nWords = len(wordsText)
         #print(nWords)
         for word in wordsText:
-            wordLowerCase = word.lower()
+            # Verifico il flag se il confronto è case sensitive oppure no
+            if caseSensitive:
+                wordLowerCase = word.lower()
+            else:
+                wordLowerCase = word
             if wordLowerCase in frequencyWords:
                 frequencyWords[wordLowerCase][0][index] = frequencyWords[wordLowerCase][0][index] + 1
                 if wordLowerCase not in wordsReadText:
